@@ -1,16 +1,4 @@
-const question = document.getElementById("question");
-const choices = Array.from(document.getElementsByClassName("choice-text"));
-const progressText = document.getElementById('progressText');
-const scoreText = document.getElementById('score');
-const progressBarFull = document.getElementById('progressBarFull');
-
-let currentQuestion = {};
-let acceptingAnswers = false;
-let score = 0;
-let questionCounter = 0;
-let availableQuestions = [];
-
-let questions = [   
+let questions = [
     {
         question: 'Which HTML tag is used to define an inline style?',
         choice1: '<script>',
@@ -37,67 +25,69 @@ let questions = [
     },
 ];
 
-// Constants
+const question = document.getElementById("question");
+const options = Array.from(document.getElementsByClassName("option-value"));
+const progressText = document.getElementById("progress-text");
+const scoreText = document.getElementById("score");
+let score = 0;
+const progressBarFull = document.getElementById("progressBarFull");
+let questionCounter = 0;
+let availableQuestions = [];
+let currentQuestion = {};
+let acceptingAnswers = false;
 const CORRECT_BONUS = 10;
-const MAX_QUESTIONS = 3;
 
-startGame = () => {
+function startGame(){
     questionCounter = 0;
-    score = 0;
     availableQuestions = [...questions];
-    console.log(availableQuestions);
-    getNewQuestion();
+    getQuestion();
 }
 
-getNewQuestion = () => {
-    if (availableQuestions.length === 0 || questionCounter >= MAX_QUESTIONS) {
-        localStorage.setItem('mostRecentScore', score);
-        // go to the end page
-        return window.location.assign('/end.html');
+function getQuestion(){
+    if(availableQuestions.length === 0 || questionCounter >= questions.length){
+        // End the game or show the result
+        return window.location.assign(`/end.html?score=${score}`);
     }
 
     questionCounter++;
-    progressText.innerText = 'Question ' + questionCounter + "/" + MAX_QUESTIONS;
-    // Update the progress bar
-    progressBarFull.style.width = `${(questionCounter / MAX_QUESTIONS) * 100}%`;
+    progressText.innerText = `Question ${questionCounter}/3`
+    progressBarFull.style.width = `${(questionCounter / 3) * 100}%`;
 
     const questionIndex = Math.floor(Math.random() * availableQuestions.length);
     currentQuestion = availableQuestions[questionIndex];
     question.innerText = currentQuestion.question;
     
-    choices.forEach(choice => {
-        const number = choice.dataset['number'];
-        choice.innerText = currentQuestion['choice' + number];
+    options.forEach(option => {
+        const number = option.dataset["number"];
+        // console.log(option)
+        option.innerText = currentQuestion["choice" + number];
     });
 
     availableQuestions.splice(questionIndex, 1);
     acceptingAnswers = true;
 }
 
-choices.forEach(choice => {
-    choice.addEventListener('click', e => {
+options.forEach((option) => {
+    option.addEventListener('click', (e) => {
         if (!acceptingAnswers) return;
-        acceptingAnswers = false;
-        const selectedChoice = e.target;
-        const selectedAnswer = selectedChoice.dataset['number'];
-        
-        // Check if the answer is correct
-        const classToApply = selectedAnswer == currentQuestion.answer ? 'correct' : 'incorrect';
 
-        if (classToApply === 'correct') {
+        acceptingAnswers = false;
+        const selectedOption = e.target.closest(".option-value");
+        const selectedAnswer = selectedOption.dataset['number'];
+        const classToApply = selectedAnswer == currentQuestion.answer ? 'correct' : 'incorrect';
+        if (classToApply === "correct") {
             incrementScore(CORRECT_BONUS);
         }
-
-        selectedChoice.parentElement.classList.add(classToApply);
+        selectedOption.classList.add(classToApply);
 
         setTimeout(() => {
-            selectedChoice.parentElement.classList.remove(classToApply);
-            getNewQuestion();
+            selectedOption.classList.remove(classToApply);
+            getQuestion();
         }, 1000);
     });
 });
 
-incrementScore = num => {
+function incrementScore(num){
     score += num;
     scoreText.innerText = score;
 }
